@@ -27,13 +27,13 @@ type MyParsec = Parsec String ()
 prog :: MyParsec Exp
 prog = do
   whitespace
-  terminatedBy eof exp
+  terminatedExp eof
 
 exp :: MyParsec Exp
 exp =   abs
     <|> var
     <|> ifte
-    <|> wrappedExp (symbol "(") (symbol ")")
+    <|> (wrappedExp (symbol "(") (symbol ")"))
     <|> app
     <?> "expression"
 
@@ -84,8 +84,18 @@ wrappedExp l r = do
   <?> "parenthesized expression"
   where twt = terminatedBy r
 
+terminatedExp :: MyParsec a -> MyParsec Exp
+terminatedExp t = do
+  twt abs
+  <|> twt var
+  <|> twt ifte
+  <|> twt (wrappedExp (symbol "(") (symbol ")"))
+  <|> twt app
+  where twt = terminatedBy t
+
 terminatedBy :: MyParsec a -> MyParsec Exp -> MyParsec Exp
-terminatedBy t p = try $ do
+terminatedBy t p = (try $ do
   x <- p
   t
-  return x
+  return x)
+  <?> "terminated by ) expression"
