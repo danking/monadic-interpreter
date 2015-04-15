@@ -3,15 +3,9 @@ module Parser (parse) where
 
 import Ast
 
-import Control.Monad (MonadPlus, mzero, mplus)
-import Data.Foldable (Foldable, asum, foldMap)
-import Data.Monoid (Monoid, mempty, mappend)
-import Data.Traversable (Traversable, traverse)
 import Lexer
 import Prelude hiding (abs, exp)
 import Text.Parsec hiding (parse)
-
-import Debug.Trace
 
 -- e ∈ E ::= λx.e
 --        |  e e
@@ -27,40 +21,43 @@ type MyParsec = Parsec String ()
 prog :: MyParsec Exp
 prog = do
   whitespace
-  terminatedExp eof
+  e <- exp
+  eof
+  return e
 
 exp :: MyParsec Exp
-exp =   abs
+exp = try app
+  <|> abs
+  <|> var
+  <|> ifte
+  <|> wrappedExp (symbol "(") (symbol ")")
+  <?> "expression"
+
+noapp :: MyParsec Exp
+noapp = abs
     <|> var
     <|> ifte
-    <|> (wrappedExp (symbol "(") (symbol ")"))
-    <|> app
+    <|> wrappedExp (symbol "(") (symbol ")")
     <?> "expression"
 
 abs :: MyParsec Exp
 abs = do
-  (trace "lambda" lambdaSymbol)
+  lambdaSymbol
   v <- identifier
-  (trace ("  v is " ++ show v) (symbol "."))
+  (symbol ".")
   e <- exp
-  _ <- (trace ("  e is " ++ show e) $ return ())
   return $ Abs v e
   <?> "lambda abstraction"
 
 app :: MyParsec Exp
 app = do
-  _ <-  trace "before app1" (return ())
-  e₁ <- exp
-  _ <-  trace "after app1" (return ())
+  e₁ <- noapp
   e₂ <- exp
   return $ App e₁ e₂
   <?> "application"
 
 var :: MyParsec Exp
-var = do
-  v <- identifier
-  return $ trace ("var is " ++ v) $ Var v
-  <?> "variable reference"
+var =  Var `fmap` identifier <?> "variable reference"
 
 ifte :: MyParsec Exp
 ifte = do
@@ -76,26 +73,12 @@ ifte = do
 wrappedExp :: MyParsec a -> MyParsec b -> MyParsec Exp
 wrappedExp l r = do
   l
-  do     twt abs
-     <|> twt var
-     <|> twt ifte
-     <|> twt (wrappedExp l r)
-     <|> twt app
+  x <- do    tw app
+         <|> tw abs
+         <|> tw var
+         <|> tw ifte
+         <|> tw (wrappedExp (symbol "(") (symbol ")"))
+  return x
   <?> "parenthesized expression"
-  where twt = terminatedBy r
+  where tw p = try $ do { v <- p ; r ; return v }
 
-terminatedExp :: MyParsec a -> MyParsec Exp
-terminatedExp t = do
-  twt abs
-  <|> twt var
-  <|> twt ifte
-  <|> twt (wrappedExp (symbol "(") (symbol ")"))
-  <|> twt app
-  where twt = terminatedBy t
-
-terminatedBy :: MyParsec a -> MyParsec Exp -> MyParsec Exp
-terminatedBy t p = (try $ do
-  x <- p
-  t
-  return x)
-  <?> "terminated by ) expression"
