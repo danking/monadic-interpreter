@@ -27,10 +27,7 @@ prog = do
 
 exp :: MyParsec Exp
 exp = try app
-  <|> abs
-  <|> var
-  <|> ifte
-  <|> wrappedExp (symbol "(") (symbol ")")
+  <|> noapp
   <?> "expression"
 
 noapp :: MyParsec Exp
