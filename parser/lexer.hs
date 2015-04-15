@@ -14,7 +14,7 @@ langdef = P.LanguageDef
           , P.identLetter = alphaNum <|> oneOf "_:!#$%&+?@\\^|~"
           , P.opStart = oneOf "+*-/<=>"
           , P.opLetter = oneOf "="
-          , P.reservedNames = ["λ"]
+          , P.reservedNames = ["λ", "if", "then", "else"]
           , P.reservedOpNames = ["+", "*", "-", "/", "<", "<=", "=", ">=", ">"]
           , P.caseSensitive = True
           }
