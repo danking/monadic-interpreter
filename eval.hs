@@ -17,10 +17,10 @@ ex = extract
 eval :: EvalComonad Exp -> EvalMonad Val
 eval a = case pushin a of
   CoAbs v e   -> return $ Clo (ex v) (ex e) (ask v)
-  CoVar v     -> address v a >>= lookup
+  CoVar v     -> address v >>= lookup
   CoApp e₁ e₂ -> do
-    f <- eval (extend (const e₁) a)
-    v <- eval (extend (const e₂) a)
+    f <- eval e₁
+    v <- eval e₂
     apply f v a
   CoIf p c a  -> undefined
 

@@ -14,7 +14,9 @@ module EvalMonad ( address
 import Ast
 import Val
 
-import Control.Comonad.Env hiding (Env)
+import FixCoEnv (asks)
+
+import Control.Comonad.Env hiding (Env, asks)
 import qualified Control.Comonad.Identity as Co
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
@@ -75,9 +77,9 @@ store v = do
   putA (a + 1)
   return a
 
-address :: Id -> EvalComonad a -> EvalMonad Addr
-address id ctx = kill $ asks (M.lookup id) ctx
-  where kill = maybeFails ("no environment mapping for " ++ show id)
+address :: EvalComonad Id -> EvalMonad Addr
+address id = kill $ asks (M.lookup `fmap` id)
+  where kill = maybeFails ("no environment mapping for " ++ show (extract id))
 
 lookup :: Addr -> EvalMonad Val
 lookup addr = (M.lookup addr) `fmap` getS >>= kill

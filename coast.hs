@@ -5,13 +5,13 @@ import Ast
 
 import Control.Comonad.Env
 
-data CoExp where
-  CoAbs :: (w Id) -> (w Exp) -> CoExp
-  CoVar :: (w Id) -> CoExp
-  CoApp :: (w Exp) -> (w Exp) -> CoExp
-  CoIf  :: (w Exp) -> (w Exp) -> (w Exp) -> CoExp
+data CoExp w where
+  CoAbs :: (w Id) -> (w Exp) -> CoExp w
+  CoVar :: (w Id) -> CoExp w
+  CoApp :: (w Exp) -> (w Exp) -> CoExp w
+  CoIf  :: (w Exp) -> (w Exp) -> (w Exp) -> CoExp w
 
-pushin :: Comonad w => w Exp -> CoExp
+pushin :: Comonad w => w Exp -> CoExp w
 pushin e = case (extract e) of
   Abs x b   -> CoAbs (w x e) (w b e)
   Var x     -> CoVar (w x e)
