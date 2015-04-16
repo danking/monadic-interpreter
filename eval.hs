@@ -7,9 +7,8 @@ import Coercions
 import EvalMonad
 import Val
 
-import Control.Comonad (Comonad, extend)
-import Control.Comonad.Env (extract, ask)
-import qualified Data.Map as M
+import Control.Comonad (Comonad)
+import Control.Comonad.Env (extract)
 
 ex :: Comonad w => w a -> a
 ex = extract
