@@ -16,7 +16,7 @@ ex = extract
 
 eval :: EvalComonad Exp -> EvalMonad Val
 eval a = case pushin a of
-  CoAbs v e   -> return $ Clo (ex v) (ex e) (ask v)
+  CoAbs v e   -> return $ Clo (ex v) e
   CoVar v     -> address v >>= lookup
   CoApp e₁ e₂ -> do
     f <- eval e₁
@@ -26,6 +26,6 @@ eval a = case pushin a of
 
 apply :: Val -> Val -> EvalMonad Val
 apply f v = do
-  (x, b, e) <- coerceClo f
+  (x, b) <- coerceClo f
   a <- store v
-  eval $ bindLocal x a e b
+  eval $ bindLocal x a b

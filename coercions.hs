@@ -4,6 +4,8 @@ import Ast
 import Val
 import EvalMonad
 
-coerceClo :: Val -> EvalMonad (Id, Exp, Env)
+import qualified Control.Comonad.Env as Co
+
+coerceClo :: Val -> EvalMonad (Id, (Co.Env Env Exp))
 coerceClo v = case v of
-  Clo x b e -> return (x, b, e)
+  Clo x b -> return (x, b)
