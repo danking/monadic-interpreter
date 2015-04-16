@@ -1,15 +1,13 @@
-{-# LANGUAGE GADTs #-}
 module CoAst (pushin, CoExp(..)) where
 
 import Ast
 
 import Control.Comonad.Env
 
-data CoExp w where
-  CoAbs :: (w Id) -> (w Exp) -> CoExp w
-  CoVar :: (w Id) -> CoExp w
-  CoApp :: (w Exp) -> (w Exp) -> CoExp w
-  CoIf  :: (w Exp) -> (w Exp) -> (w Exp) -> CoExp w
+data CoExp w = CoAbs (w Id) (w Exp)
+             | CoVar (w Id)
+             | CoApp (w Exp) (w Exp)
+             | CoIf (w Exp) (w Exp) (w Exp)
 
 pushin :: Comonad w => w Exp -> CoExp w
 pushin e = case (extract e) of
