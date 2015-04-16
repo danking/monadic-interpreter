@@ -21,11 +21,11 @@ eval a = case pushin a of
   CoApp e₁ e₂ -> do
     f <- eval e₁
     v <- eval e₂
-    apply f v a
+    apply f v
   CoIf p c a  -> undefined
 
-apply :: Val -> Val -> EvalComonad a -> EvalMonad Val
-apply f v ctx = do
+apply :: Val -> Val -> EvalMonad Val
+apply f v = do
   (x, b, e) <- coerceClo f
   a <- store v
   eval $ bindLocal x a e b
