@@ -17,7 +17,6 @@ import Val
 import Control.Comonad.Env hiding (Env)
 import qualified Control.Comonad.Identity as Co
 import Control.Monad.Trans.Class
-import Control.Monad.Trans.Either
 import Control.Monad.Trans.State
 import Control.Monad.Identity
 import qualified Data.Map as M
