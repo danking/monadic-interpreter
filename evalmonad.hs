@@ -2,6 +2,8 @@ module EvalMonad ( address
                  , bindLocal
                  , injectProg
                  , lookup
+                 , pushKon
+                 , popKon
                  , runEvalMonad
                  , runEvalMonad'
                  , store
@@ -12,7 +14,7 @@ module EvalMonad ( address
                  ) where
 
 import Ast
-import Val
+import KonValEnv
 
 import FixCoEnv (asks)
 
@@ -24,12 +26,12 @@ import qualified Data.Map as M
 import Prelude hiding (lookup)
 
 type Store = M.Map Addr Val
-type EvalComonad = Co.Env Env
+type EvalComonad = Co.Env (Kon, Env)
 type Failure = String
 type EvalMonad = StateT (Addr, Store) (Either Failure)
 
 injectProg :: Exp -> EvalComonad Exp
-injectProg = Co.env emptyenv
+injectProg = Co.env (halt, emptyenv)
 
 emptystate :: (Addr, Store)
 emptystate = (0, M.empty)
@@ -40,6 +42,18 @@ runEvalMonad ma = fst `fmap` runStateT ma emptystate
 runEvalMonad' :: EvalMonad a -> Either Failure (a, (Addr, Store))
 runEvalMonad' ma = runStateT ma emptystate
 
+
+askK :: EvalComonad a -> Kon
+askK = fst . Co.ask
+
+asksK :: EvalComonad (Kon -> a) -> a
+asksK a = asks $ fmap (. fst) a
+
+askE :: EvalComonad a -> Env
+askE = snd . Co.ask
+
+asksE :: EvalComonad (Env -> a) -> a
+asksE a = asks $ fmap (. snd) a
 
 getA :: EvalMonad Addr
 getA = fst `fmap` get
@@ -63,10 +77,24 @@ maybeFails msg ma = case ma of
   Nothing -> failM msg
   Just a  -> return a
 
+infix 3 ×
+(×) :: (a -> c) -> (b -> d) -> (a, b) -> (c, d)
+(×) f g (a,b) = (f a, g b)
+
+pushKon :: Frame -> EvalComonad a -> EvalComonad a
+pushKon k e =
+  Co.local push e
+  where push = (k :) × id
+
+popKon :: EvalComonad a -> EvalComonad Frame
+popKon e =
+  Co.local pop (Co.extend (head . askK) e)
+  where pop = tail × id
+
 bindLocal :: Id -> Addr -> EvalComonad a -> EvalComonad a
 bindLocal x a b =
   Co.local bind b
-  where bind = M.insert x a
+  where bind = id × M.insert x a
 
 store :: Val -> EvalMonad Addr
 store v = do
@@ -77,7 +105,7 @@ store v = do
   return a
 
 address :: EvalComonad Id -> EvalMonad Addr
-address id = kill $ asks (M.lookup `fmap` id)
+address id = kill $ asksE $ M.lookup `fmap` id
   where kill = maybeFails ("no environment mapping for " ++ show (Co.extract id))
 
 lookup :: Addr -> EvalMonad Val
