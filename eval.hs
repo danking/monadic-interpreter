@@ -6,6 +6,7 @@ import CoAst
 import Coercions
 import EvalMonad
 import Val
+import qualified Kon
 
 import Control.Comonad (Comonad)
 import Control.Comonad.Env (extract)
@@ -18,8 +19,8 @@ eval a = case pushin a of
   CoAbs v e   -> return $ Clo (ex v) e
   CoVar v     -> address v >>= lookup
   CoApp e₁ e₂ -> do
-    f <- eval e₁
-    v <- eval e₂
+    f <- eval $ pushKon (Kon.AppL e₂) e₁
+    v <- eval $ pushKon (Kon.AppR f) e₂
     apply f v
   CoIf p c a  -> undefined
 
