@@ -1,5 +1,6 @@
 module EvalMonad ( address
                  , bindLocal
+                 , failM
                  , injectProg
                  , lookup
                  , pushKon

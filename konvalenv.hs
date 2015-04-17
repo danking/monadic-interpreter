@@ -34,10 +34,14 @@ type Addr = Integer
 type Env = M.Map Ast.Id Addr
 type ExpInCtx = Co.Env (Kon, Env) Ast.Exp
 data Val = Clo Ast.Id ExpInCtx
+         | I Integer
+         | B Bool
 
 instance Show Val where
   show (Clo v b) =
     "(Clo " ++ show v ++ " " ++ show (Co.extract b) ++ ")"
+  show (I i) = "(I " ++ show i ++ ")"
+  show (B b) = "(B " ++ show b ++ ")"
 
 emptyenv :: Env
 emptyenv = M.empty
