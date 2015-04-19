@@ -41,9 +41,9 @@ noapp = abs
 
 abs :: MyParsec Exp
 abs = do
-  lambdaSymbol
+  _ <- lambdaSymbol
   v <- identifier
-  (symbol ".")
+  _ <- symbol "."
   e <- exp
   return $ Abs v e
   <?> "lambda abstraction"
@@ -67,11 +67,11 @@ var =  Var `fmap` identifier <?> "variable reference"
 
 ifte :: MyParsec Exp
 ifte = do
-  symbol "if"
+  _  <- symbol "if"
   e₁ <- exp
-  symbol "then"
+  _  <- symbol "then"
   e₂ <- exp
-  symbol "else"
+  _  <- symbol "else"
   e₃ <- exp
   return $ If e₁ e₂ e₃
   <?> "if"
@@ -98,7 +98,7 @@ binop = (reserved "+"  >> return Plus)
 
 wrappedExp :: MyParsec a -> MyParsec b -> MyParsec Exp
 wrappedExp l r = do
-  l
+  _ <- l
   x <- do    tw bop
          <|> tw app
          <|> tw abs
@@ -107,5 +107,5 @@ wrappedExp l r = do
          <|> tw (wrappedExp (symbol "(") (symbol ")"))
   return x
   <?> "parenthesized expression"
-  where tw p = try $ do { v <- p ; r ; return v }
+  where tw p = try $ do { v <- p ; _ <- r ; return v }
 
