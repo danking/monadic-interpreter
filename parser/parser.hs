@@ -27,6 +27,7 @@ prog = do
 
 exp :: MyParsec Exp
 exp = try app
+  <|> try bop
   <|> noapp
   <?> "expression"
 
@@ -35,7 +36,6 @@ noapp = abs
     <|> var
     <|> ifte
     <|> int
-    <|> bop
     <|> wrappedExp (symbol "(") (symbol ")")
     <?> "expression"
 
@@ -81,7 +81,7 @@ int = fmap I integer
 
 bop :: MyParsec Exp
 bop = do
-  e₁ <- exp
+  e₁ <- noapp
   op <- operator
   e₂ <- exp
   return $ BOp (binopFromString op) e₁ e₂
@@ -101,6 +101,7 @@ wrappedExp :: MyParsec a -> MyParsec b -> MyParsec Exp
 wrappedExp l r = do
   l
   x <- do    tw app
+         <|> tw bop
          <|> tw abs
          <|> tw var
          <|> tw ifte
