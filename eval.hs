@@ -7,7 +7,6 @@ import Coercions
 import EvalMonad
 import HSVal
 import Val
-import qualified Kon
 
 import Control.Comonad (Comonad)
 import Control.Comonad.Env (extract)
