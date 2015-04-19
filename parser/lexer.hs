@@ -6,6 +6,7 @@ module Lexer ( whitespace
              , identifier
              , reserved
              , reservedOp
+             , operator
              , lambdaSymbol
              ) where
 
@@ -23,7 +24,7 @@ langdef = P.LanguageDef
           , P.opStart = oneOf "+*-/<=>"
           , P.opLetter = oneOf "="
           , P.reservedNames = ["λ", "if", "then", "else"]
-          , P.reservedOpNames = ["+", "*", "-", "/", "<", "<=", "=", ">=", ">"]
+          , P.reservedOpNames = ["+", "*", "-", "/", "<", "<=", "==", ">=", ">"]
           , P.caseSensitive = True
           }
 
@@ -38,6 +39,7 @@ parens     = P.parens lexer
 identifier = P.identifier lexer
 reserved   = P.reserved lexer
 reservedOp = P.reservedOp lexer
+operator   = P.operator lexer
 
 lambdaSymbol :: Parsec String () String
 lambdaSymbol = symbol "λ" <|> symbol "\\"

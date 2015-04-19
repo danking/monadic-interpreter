@@ -14,7 +14,7 @@ coerceClo v = case v of
 
 coerceInt :: Val -> EvalMonad Integer
 coerceInt v = case v of
-  I n -> return n
+  Val.I n -> return n
   x -> failM $ "needed an int, but found a " ++ show x
 
 coerceBool :: Val -> EvalMonad Bool

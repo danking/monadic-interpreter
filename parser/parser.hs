@@ -4,7 +4,7 @@ module Parser (parse) where
 import Ast
 
 import Lexer
-import Prelude hiding (abs, exp)
+import Prelude hiding (abs, exp, EQ, LT, GT)
 import Text.Parsec hiding (parse)
 
 -- e ∈ E ::= λx.e
@@ -34,6 +34,8 @@ noapp :: MyParsec Exp
 noapp = abs
     <|> var
     <|> ifte
+    <|> int
+    <|> bop
     <|> wrappedExp (symbol "(") (symbol ")")
     <?> "expression"
 
@@ -73,6 +75,27 @@ ifte = do
   e₃ <- exp
   return $ If e₁ e₂ e₃
   <?> "if"
+
+int :: MyParsec Exp
+int = fmap I integer
+
+bop :: MyParsec Exp
+bop = do
+  e₁ <- exp
+  op <- operator
+  e₂ <- exp
+  return $ BOp (binopFromString op) e₁ e₂
+
+binopFromString :: String -> BinOp
+binopFromString o = case o of
+  "+"  -> Plus
+  "*"  -> Times
+  "-"  -> Minus
+  "<"  -> LT
+  "<=" -> LTE
+  "==" -> EQ
+  ">=" -> GTE
+  ">"  -> GT
 
 wrappedExp :: MyParsec a -> MyParsec b -> MyParsec Exp
 wrappedExp l r = do

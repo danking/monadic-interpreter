@@ -1,6 +1,6 @@
 module Eval where
 
-import Prelude hiding (lookup, LT, GT)
+import Prelude hiding (lookup, LT, GT, EQ)
 import Ast
 import CoAst
 import Coercions
@@ -27,6 +27,8 @@ eval a = case pushin a of
     v₁ <- eval e₁
     v₂ <- eval e₂
     evalOp b v₁ v₂
+  CoI i ->
+    return $ Val.I i
   CoIf p c a -> do
     b <- coerceBool =<< eval p
     if b
@@ -48,6 +50,7 @@ evalOp b = case b of
   GT  -> liftBinOp ((>)  :: Integer -> Integer -> Bool)
   LTE -> liftBinOp ((<=) :: Integer -> Integer -> Bool)
   GTE -> liftBinOp ((>=) :: Integer -> Integer -> Bool)
+  EQ  -> liftBinOp ((==) :: Integer -> Integer -> Bool)
 
 liftBinOp :: ValLike a => ValLike b =>
              (a -> a -> b) -> Val -> Val -> EvalMonad Val
