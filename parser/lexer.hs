@@ -1,10 +1,18 @@
-module Lexer where
+module Lexer ( whitespace
+             , lexeme
+             , symbol
+             , integer
+             , parens
+             , identifier
+             , reserved
+             , reservedOp
+             , lambdaSymbol
+             ) where
 
-import Control.Monad.Identity
 import Text.Parsec
 import qualified Text.Parsec.Token as P
 
-langdef :: P.GenLanguageDef String () Identity
+langdef :: P.LanguageDef ()
 langdef = P.LanguageDef
           { P.commentStart = "(*"
           , P.commentEnd = "*)"
@@ -25,11 +33,11 @@ lexer  = P.makeTokenParser langdef
 whitespace = P.whiteSpace lexer
 lexeme     = P.lexeme lexer
 symbol     = P.symbol lexer
-natural    = P.natural lexer
+integer    = P.integer lexer
 parens     = P.parens lexer
 identifier = P.identifier lexer
 reserved   = P.reserved lexer
 reservedOp = P.reservedOp lexer
 
-lambdaSymbol :: ParsecT String () Identity String
+lambdaSymbol :: Parsec String () String
 lambdaSymbol = symbol "λ" <|> symbol "\\"
