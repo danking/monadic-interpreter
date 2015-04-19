@@ -50,8 +50,15 @@ app :: MyParsec Exp
 app = do
   e₁ <- noapp
   e₂ <- exp
-  return $ App e₁ e₂
+  return $ rotateApp e₁ e₂
   <?> "application"
+
+-- To avoid left-recursion, app is right-associatively parsed. We undo that with
+-- `rotateApp`
+rotateApp :: Exp -> Exp -> Exp
+rotateApp e₁ e = case e of
+  App e₂ e₃ -> rotateApp (App e₁ e₂) e₃
+  e₂        -> App e₁ e₂
 
 var :: MyParsec Exp
 var =  Var `fmap` identifier <?> "variable reference"
