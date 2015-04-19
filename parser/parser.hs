@@ -26,8 +26,8 @@ prog = do
   return e
 
 exp :: MyParsec Exp
-exp = try app
-  <|> try bop
+exp = try bop
+  <|> try app
   <|> noapp
   <?> "expression"
 
@@ -52,7 +52,7 @@ app :: MyParsec Exp
 app = do
   e₁ <- noapp
   e₂ <- exp
-  return $ rotateApp e₁ e₂
+  return $ App e₁ e₂
   <?> "application"
 
 -- To avoid left-recursion, app is right-associatively parsed. We undo that with
@@ -82,26 +82,25 @@ int = fmap I integer
 bop :: MyParsec Exp
 bop = do
   e₁ <- noapp
-  op <- operator
+  op <- binop
   e₂ <- exp
-  return $ BOp (binopFromString op) e₁ e₂
+  return $ BOp op e₁ e₂
 
-binopFromString :: String -> BinOp
-binopFromString o = case o of
-  "+"  -> Plus
-  "*"  -> Times
-  "-"  -> Minus
-  "<"  -> LT
-  "<=" -> LTE
-  "==" -> EQ
-  ">=" -> GTE
-  ">"  -> GT
+binop :: MyParsec BinOp
+binop = (reserved "+"  >> return Plus)
+    <|> (reserved "*"  >> return Times)
+    <|> (reserved "-"  >> return Minus)
+    <|> (reserved "<"  >> return LT)
+    <|> (reserved "<=" >> return LTE)
+    <|> (reserved "==" >> return EQ)
+    <|> (reserved ">=" >> return GTE)
+    <|> (reserved ">"  >> return GT)
 
 wrappedExp :: MyParsec a -> MyParsec b -> MyParsec Exp
 wrappedExp l r = do
   l
-  x <- do    tw app
-         <|> tw bop
+  x <- do    tw bop
+         <|> tw app
          <|> tw abs
          <|> tw var
          <|> tw ifte
