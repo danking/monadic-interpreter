@@ -14,8 +14,9 @@ module EvalMonad ( address
 import Ast
 import Val
 
-import Control.Comonad.Env hiding (Env)
-import qualified Control.Comonad.Identity as Co
+import FixCoEnv (asks)
+
+import qualified Control.Comonad.Env as Co
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
 import Control.Monad.Identity
@@ -23,12 +24,12 @@ import qualified Data.Map as M
 import Prelude hiding (lookup)
 
 type Store = M.Map Addr Val
-type EvalComonad = EnvT Env Co.Identity
+type EvalComonad = Co.Env Env
 type Failure = String
 type EvalMonad = StateT (Addr, Store) (Either Failure)
 
 injectProg :: Exp -> EvalComonad Exp
-injectProg = env emptyenv
+injectProg = Co.env emptyenv
 
 emptystate :: (Addr, Store)
 emptystate = (0, M.empty)
@@ -62,9 +63,9 @@ maybeFails msg ma = case ma of
   Nothing -> failM msg
   Just a  -> return a
 
-bindLocal :: Id -> Addr -> Env -> a -> EvalComonad a
-bindLocal x a e b =
-  local bind (env e b)
+bindLocal :: Id -> Addr -> EvalComonad a -> EvalComonad a
+bindLocal x a b =
+  Co.local bind b
   where bind = M.insert x a
 
 store :: Val -> EvalMonad Addr
@@ -75,9 +76,9 @@ store v = do
   putA (a + 1)
   return a
 
-address :: Id -> EvalComonad a -> EvalMonad Addr
-address id ctx = kill $ asks (M.lookup id) ctx
-  where kill = maybeFails ("no environment mapping for " ++ show id)
+address :: EvalComonad Id -> EvalMonad Addr
+address id = kill $ asks (M.lookup `fmap` id)
+  where kill = maybeFails ("no environment mapping for " ++ show (Co.extract id))
 
 lookup :: Addr -> EvalMonad Val
 lookup addr = (M.lookup addr) `fmap` getS >>= kill
