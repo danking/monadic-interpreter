@@ -21,7 +21,7 @@ executable monadic-interpreter
                      , Parser
                      , Lexer
   -- other-extensions:
-  build-depends:       base >=4.7 && <4.8
+  build-depends:       base
                      , parsec
                      , mtl
                      , containers
